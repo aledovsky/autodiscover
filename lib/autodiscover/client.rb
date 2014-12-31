@@ -80,8 +80,13 @@ module Autodiscover
     def try_standard_redirection_url(credentials, req_body)
       url = "http://autodiscover.#{credentials.smtp_domain}/autodiscover/autodiscover.xml"
       @debug_dev << "AUTODISCOVER: looking for redirect from #{url}\n" if @debug_dev
-      response = @http.get(url) rescue nil
-      return nil unless response
+      begin
+        response = @http.get(url)
+      rescue SocketError => error
+        raise Autodiscover::Error.new('', error)
+      rescue
+        return nil
+      end
 
       if response.status_code == 302
         try_redirect_url(response.header['Location'].first, credentials, req_body)
@@ -98,6 +103,8 @@ module Autodiscover
 
       if response.status_code == 302
         try_redirect_url(response.header['Location'].first, credentials, req_body)
+      elsif HTTP::Status::UNAUTHORIZED == response.status_code
+        raise Autodiscover::Error.new(HTTP::Status::UNAUTHORIZED, 'Unauthorized access')
       elsif HTTP::Status.successful?(response.status_code)
         result = parse_response(response.content)
         case result
