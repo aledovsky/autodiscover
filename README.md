@@ -30,6 +30,11 @@ How to Use
     ews_url = services.ews_url
     ttl = services.ttl
 
+Run tests
+---------
+
+    ruby -Ilib -rautodiscover test/unit_test.rb
+
 Options
 -------
 

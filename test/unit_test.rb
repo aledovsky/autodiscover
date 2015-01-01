@@ -193,3 +193,26 @@ class AutodiscoverResponseTest < Test::Unit::TestCase
     assert_nil response
   end
 end
+
+class AutodiscoverForceURLTest < Test::Unit::TestCase
+  FORCED_AUTODISCOVER_URL                  = "https://outpost.mercury/autodiscover/autodiscover.xml"
+  FORCED_AUTODISCOVER_URL_WITH_CREDENTIALS = "https://spiff%40spacecommand.sol:hobbes@outpost.mercury/autodiscover/autodiscover.xml"
+
+  def setup
+    @credentials = Autodiscover::Credentials.new('spiff@spacecommand.sol', 'spiff@spacecommand.sol', 'hobbes')
+    @client      = Autodiscover::Client.new(autodiscover_url: FORCED_AUTODISCOVER_URL)
+  end
+
+  def test_forced_autodiscover_url
+    WebMock::stub_request(:post, FORCED_AUTODISCOVER_URL_WITH_CREDENTIALS).to_return(
+      body:    SETTINGS_AUTODISCOVER_RESPONSE,
+      status:  200, 
+      headers: { 'Content-Length' => SETTINGS_AUTODISCOVER_RESPONSE.size }
+    )
+
+    response = @client.get_services(@credentials)
+
+    assert_not_nil response
+    assert_equal 'https://ews.spacecommand.sol/EWS/Exchange.asmx', response.ews_url
+  end
+end

@@ -31,6 +31,8 @@ module Autodiscover
   # Client objects are used to make queries to the autodiscover server, to
   # specify configuration values, and to maintain state between requests.
   class Client
+    attr_reader :autodiscover_url
+
     # Creates a Client object.
     #
     # The following options can be specified:
@@ -39,9 +41,10 @@ module Autodiscover
     #                              a connection. The default value is 10 seconds.
     # <tt>:debug_dev</tt>::        Device that debug messages and all HTTP
     #                              requests and responses are dumped to. The debug
-    #                              device must respond to <tt><<</tt> for dump. 
+    # <tt>:autodiscover_url</tt>:: Specific autodiscover URL
     def initialize(options={})
-      @debug_dev = options[:debug_dev]
+      @debug_dev        = options[:debug_dev]
+      @autodiscover_url = options[:autodiscover_url]
 
       @http = HTTPClient.new
       @http.connect_timeout = options[:connect_timeout] || CONNECT_TIMEOUT_DEFAULT
@@ -59,22 +62,32 @@ module Autodiscover
       req_body = build_request_body credentials.email
 
       try_standard_secure_urls(credentials, req_body) ||
-      try_standard_redirection_url(credentials, req_body) ||
-      try_dns_serv_record
+      try_standard_redirection_url(credentials, req_body)
     end
 
     private
 
     def try_standard_secure_urls(credentials, req_body)
       response = nil
-      [ "https://#{credentials.smtp_domain}/autodiscover/autodiscover.xml",
-        "https://autodiscover.#{credentials.smtp_domain}/autodiscover/autodiscover.xml"
-      ].each do |url|
+
+      choose_autodiscover_urls(credentials).each do |url|
         @debug_dev << "AUTODISCOVER: trying #{url}\n" if @debug_dev
         response = try_secure_url(url, credentials, req_body)
         break if response
       end
+
       response
+    end
+
+    def choose_autodiscover_urls(credentials)
+      if autodiscover_url
+        [autodiscover_url]
+      else
+        [
+          "https://#{credentials.smtp_domain}/autodiscover/autodiscover.xml",
+          "https://autodiscover.#{credentials.smtp_domain}/autodiscover/autodiscover.xml",
+        ]
+      end
     end
 
     def try_standard_redirection_url(credentials, req_body)
@@ -141,10 +154,6 @@ module Autodiscover
       return nil if @redirect_count > REDIRECT_LIMIT
 
       get_services(credentials, false)
-    end
-
-    def try_dns_serv_record
-      nil
     end
 
     def build_request_body(email)
