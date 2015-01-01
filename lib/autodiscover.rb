@@ -21,7 +21,9 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require 'autodiscover/client'
-require 'autodiscover/credentials'
-require 'autodiscover/services'
-require 'autodiscover/error'
+require "net/ntlm"
+
+require_relative "autodiscover/client"
+require_relative "autodiscover/credentials"
+require_relative "autodiscover/services"
+require_relative "autodiscover/error"

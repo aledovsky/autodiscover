@@ -47,6 +47,7 @@ module Autodiscover
       @autodiscover_url = options[:autodiscover_url]
 
       @http = HTTPClient.new
+      @http.force_basic_auth = true # Saves one unathenticated request
       @http.connect_timeout = options[:connect_timeout] || CONNECT_TIMEOUT_DEFAULT
       @http.debug_dev = @debug_dev if @debug_dev
 

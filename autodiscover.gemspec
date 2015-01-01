@@ -16,6 +16,8 @@ Gem::Specification.new do |s|
   s.test_files = Dir['test/*.rb']
 
   s.add_runtime_dependency  'nokogiri'
-  s.add_runtime_dependency  'httpclient'
+  s.add_runtime_dependency  'httpclient', ['>= 2.5.2']
+  s.add_runtime_dependency  'rubyntlm'
+
   s.add_development_dependency 'webmock'
 end
